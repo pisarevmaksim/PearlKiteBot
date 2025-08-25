@@ -2,6 +2,7 @@
 # bot.py
 import os
 import re
+from functools import partial
 from pathlib import Path
 from datetime import datetime
 from telegram import Update, User
@@ -123,6 +124,35 @@ async def ride_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await context.bot.send_message(chat_id=chat_id, text=ok)
 
+async def kitex_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE, invoked: str):
+    args = " ".join(context.args) if context.args else "(без аргументов)"
+    msg = update.effective_message
+    chat = update.effective_chat
+
+
+    ensure_events_file()
+    ts = datetime.now().isoformat(timespec="seconds")
+    chat_id = chat.id if chat else ""
+    user_id = update.effective_user.id if update.effective_user else ""
+    name = real_user_name(update.effective_user)
+    kite = invoked
+    frm = "now"
+    to = "."
+
+    # TSV: ts\tchat_id\tuser_id\tname\tкайт\tfrom\tto
+    line = f"{ts}\t{chat_id}\t{user_id}\t{name}\t{kite}\t{frm}\t{to}"
+    with EVENTS_PATH.open("a", encoding="utf-8", newline="\n") as f:
+        f.write(line + "\n")
+
+    ok = f"Сохранено: {name} | [{kite}] | {frm} → {to}\n→ {EVENTS_PATH}"
+    if msg:
+        await msg.reply_text(ok)
+    else:
+        await context.bot.send_message(chat_id=chat_id, text=ok)
+
+    await update.effective_message.reply_text(f"Меня вызвали /{invoked}. Аргументы: {args}")
+
+
 async def list_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE):
     msg = update.effective_message
     chat = update.effective_chat
@@ -179,6 +209,10 @@ def main():
 
     # Canonical command
     app.add_handler(CommandHandler("go_kite", ride_cmd))
+
+    app.add_handler(CommandHandler("k1", partial(kitex_cmd, invoked="kite1")))
+    app.add_handler(CommandHandler("k2", partial(kitex_cmd, invoked="kite2")))
+    app.add_handler(CommandHandler("k3", partial(kitex_cmd, invoked="kite3")))
 
     app.add_handler(CommandHandler("list", list_cmd))
     app.add_handler(CommandHandler("start", start))
