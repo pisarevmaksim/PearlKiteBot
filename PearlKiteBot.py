@@ -179,9 +179,6 @@ def main():
 
     # Canonical command
     app.add_handler(CommandHandler("go_kite", ride_cmd))
-    # Optional aliases for compatibility
-    app.add_handler(CommandHandler("idu_katatsya", ride_cmd))
-    app.add_handler(MessageHandler(filters.Regex(r"^/\s*иду_кататься(?:@\w+)?(?:\s|$)"), ride_cmd))
 
     app.add_handler(CommandHandler("list", list_cmd))
     app.add_handler(CommandHandler("start", start))
